@@ -56,7 +56,7 @@ void loop(){
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
 
   error = 
-  xbee802.send( RX_ADDRESS, frame.buffer, frame.length); 
+  xbee802.send(RX_ADDRESS, frame.buffer, frame.length); 
   if( error == 0 ){   // check TX flag
     USB.println(F("---> frame sent ok"));
   }
