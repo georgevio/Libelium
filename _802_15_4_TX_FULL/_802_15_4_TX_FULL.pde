@@ -71,7 +71,6 @@ void setup(){
 
 
 void loop(){
-  delay(3000); // it goes too fast
   USB.println(F("\n************** LOOP STARTS **************\n"));
 
   counter++;
