@@ -1,7 +1,6 @@
 #include <WaspXBee802.h>
 
-// Destination MAC address MESHLIUM 20221020
-//char MESHLIUM_ADDRESS[] = "0013A200414F5598"; 
+  /* IoT LAB Robby_1 MAC address MESHLIUM */
   char MESHLIUM_ADDRESS[] = "0013A20041678A0E";
 
 uint8_t socket = SOCKET0;
@@ -12,17 +11,12 @@ void setup(){
   USB.ON(); 
   RTC.ON();
   xbee802.ON(socket);
-//}
-//void loop(){    
-  //USB.println(F("Setting RTC time from Meshlium settings"));
+}
 
-  USB.println(F("AAAAAAAAAAAA"));//error,DEC);
+void loop(){    
+  USB.println(F("Setting RTC time from Meshlium settings"));
   
-  // set RTC time
   error = xbee802.setRTCfromMeshlium(MESHLIUM_ADDRESS);
-  
-  USB.println(F("DDDDDDDDD"));//error,DEC);
-  
   if( error == 0 ){
     USB.print(F("SET RTC ok. "));
   }else{
@@ -32,7 +26,7 @@ void setup(){
   USB.print(F("RTC Time:"));
   USB.println(RTC.getTime());
   
-  //delay(5000);
+  delay(9000);
 }
-void loop(){ }
+
 

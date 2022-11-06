@@ -11,7 +11,7 @@ int delayTime;
 
 char WASPMOTE_ID[] = "node_RECV_RX";
 char MY_NET_ADDRESS[] = "1221";
-char TX_NET_ADDRESS[8];
+char TX_NET_ADDRESS[2];
 
 int rssi;
 
@@ -27,7 +27,6 @@ void setup(){
 
   USB.print(F("---> API mode: "));
   USB.println(api_mode, DEC);
-  /* Set API mode accordingly */
   xbee802.setAPI(api_mode); /* WHEN SET OTHERWISE, IT IS NOT WORKING !! */
 
  /*to select at any time if the modules are to use 
@@ -84,8 +83,6 @@ void loop(){
     }
     USB.println();
     
-    /*** Available info in library structure ***/
-    /* get Source's MAC address */
     USB.print(F("---> Source (TX) MAC address: ")); 
     for (int i=0;i<8;i++){
       TX_MAC_ADDRESS[i] = xbee802._srcMAC[i]; 
@@ -119,8 +116,15 @@ void loop(){
     /* Send message back to TX node */
     USB.println(F("\n------- 2. Send a response to the TX node ------")); 
 
-    frame.createFrame(ASCII);//, "responce");
+    frame.createFrame(ASCII, WASP_MOTE_ID); /* Set the ID inside the frame */
     frame.setFrameSize(125);
+    /* EXAMPLE_FRAME
+     TIMEOUT_FRAME
+     EVENT_FRAME
+     ALARM_FRAME
+     SERVICE1_FRAME
+     SERVICE2_FRAME */
+    frame.setFrameType(EVENT_FRAME); 
     frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
     USB.println(F("--->Frame to be sent back below"));
     frame.showFrame();
@@ -169,7 +173,7 @@ void loop(){
     USB.println(error,DEC);     
   }
   
-  delayTime = 3; /* seconds */
+  delayTime = 5; /* seconds */
   USB.print(F("\n***** LOOP END, Wait for "));
   USB.print(delayTime);
   USB.print(F(" sec *********\n"));
