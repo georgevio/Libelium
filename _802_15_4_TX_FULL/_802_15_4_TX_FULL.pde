@@ -1,17 +1,25 @@
 #include <WaspXBee802.h>
 #include <WaspFrame.h>
 
-/* Nov 02, 2022, Synced with github https://github.com/georgevio/libelium.git */
+/* Github https://github.com/georgevio/libelium.git */
 
 char RX_ADDRESS[] =     "000000000000FFFF"; /* BROADCAST */
 //char RX_ADDRESS[] =   "0013A20041678A0E"; /* AP MEshlium MAC */
 //char RX_ADDRESS[] =   "0013A2004149DA14"; //XBEE S1 from IoT lab
-
-char NODE_ID[] = "TX_G_FULL_1";
-char NODE_DATA[] = "";
+//char RX_ADDRESS[] =     "0013A2004149DA23";
 
 char MY_NET_ADDRESS[]="2112";
 char RX_NET_ADDRESS[]="1221";
+
+/* In 802.15.4 you can use either full 8 HEX standard MAC
+ *  Address, or you can use the 2 HEX NET address.
+ *  The receiver will adapt automatically.
+ *  0= use NET ADDRESS, 1 = USE MAC */
+uint8_t ADDRESS_TYPE = 0;
+
+char NODE_ID[] = "TX_G_FULL_1";
+
+char node_data[20];
 
 uint8_t error;
 int counter = 0;
@@ -24,6 +32,11 @@ void setup(){
   USB.ON();
   USB.println(F("\n******* 802.15.4 SEND (TX) FULL ******\n"));
   xbee802.ON(); 
+
+  xbee802.setNodeIdentifier(NODE_ID);
+  xbee802.getNodeIdentifier();
+  USB.print(F("---> node ID: "));
+  USB.println(xbee802.nodeID); /* Should print the whole array */  
 
   USB.print(F("---> API mode: "));
   USB.println(api_mode, DEC);
@@ -60,12 +73,6 @@ void setup(){
     USB.print(F(") ERROR!..."));
   }
   USB.println();
-  
-  xbee802.setNodeIdentifier(NODE_ID);
-  xbee802.getNodeIdentifier();
-  USB.print(F("---> node ID: "));
-  USB.println(xbee802.nodeID); /* Should print the whole array */
-  USB.println();
 
 }
 
@@ -74,15 +81,20 @@ void loop(){
   USB.println(F("\n************** LOOP STARTS **************\n"));
 
   counter++;
-  
+  sprintf(node_data,"Packet No:%d",counter);
+
   USB.println(F("-------- 1. Create ASCII frame ----------"));
   frame.createFrame(ASCII);  
   frame.setFrameSize(125);
-  //frame.addSensor(SENSOR_STR, counter); 
+  frame.addSensor(SENSOR_STR, node_data); 
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-
-  error = 
-  xbee802.send(RX_ADDRESS, frame.buffer, frame.length); 
+  USB.println(F("---> Frame 2 send: ")); frame.showFrame();
+  
+  if(ADDRESS_TYPE == 0){ /* 0 or 1 */
+    error = xbee802.send(RX_NET_ADDRESS, frame.buffer, frame.length); 
+  }else{
+    error = xbee802.send(RX_ADDRESS, frame.buffer, frame.length);
+  }
   if( error == 0 ){   // check TX flag
     USB.println(F("---> frame sent ok"));
     Utils.blinkGreenLED();  
@@ -92,7 +104,7 @@ void loop(){
     USB.println(xbee802._rssi); 
 
     /* Receive XBee packet (wait message for 2 seconds) */
-    error = xbee802.receivePacketTimeout( 2000 );
+    error = xbee802.receivePacketTimeout( 4000 );
     if( error == 0 ){    
       USB.println(F("------- 1.1 Responce packet received ---------"));
       /* define the variable ad hoc */
