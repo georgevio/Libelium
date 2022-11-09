@@ -5,14 +5,19 @@
 
 // TODO: Only broadcast seems to work
 
-char RX_ADDRESS[] =     "000000000000FFFF"; /* BROADCAST */
+//char RX_ADDRESS[] =     "000000000000FFFF"; /* BROADCAST */
 //char RX_ADDRESS[] =   "0013A20041678A0E"; /* AP MEshlium MAC */
 //char RX_ADDRESS[] =   "0013A2004149DA14"; //XBEE S1 from IoT lab
-//char RX_ADDRESS[] =     "0013A2004149DA23";
+char RX_ADDRESS[] =     "0013A2004149DA23";
 
+/* NOTE Nov 08, 2022:
+ *  Only NET address seems to work.
+ *  MAC Address works only for broadcast,
+ *  not for specific address
+ */
 char MY_NET_ADDRESS[]="2112";
 char RX_NET_ADDRESS[]="1221";
-char MESHLIUM_NET_ADDRESS[]="1111";
+//char RX_NET_ADDRESS[]="1111"; // MESHLIUM NET ADDRESS
 
 /* In 802.15.4 you can use either full 8 HEX standard MAC
  *  Address, or you can use the 2 HEX NET address.
@@ -98,11 +103,15 @@ void loop(){
   frame.setFrameType(EVENT_FRAME); 
   frame.addSensor(SENSOR_STR, node_data); 
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-  USB.println(F("---> Frame 2 send: ")); frame.showFrame();
+  //USB.println(F("---> Frame 2 send: ")); frame.showFrame();
   
   if(ADDRESS_TYPE == 0){ /* 0 or 1 */
+    USB.print(F("Sending to NET address: "));
+    USB.println(RX_NET_ADDRESS);
     error = xbee802.send(RX_NET_ADDRESS, frame.buffer, frame.length); 
   }else{
+    USB.print(F("Sending to MAC address: "));
+    USB.println(RX_ADDRESS);
     error = xbee802.send(RX_ADDRESS, frame.buffer, frame.length);
   }
   if( error == 0 ){   // check TX flag
