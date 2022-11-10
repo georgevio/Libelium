@@ -12,7 +12,6 @@ uint8_t error;
 uint8_t status;
 unsigned long previous;
 
-// define the Waspmote ID 
 char moteID[] = "node_BME280";
 
 void setup() {
@@ -48,7 +47,6 @@ void loop(){
 
     // 3.1. Create a new Frame (only ASCII)
     frame.createFrame(ASCII); 
-
     frame.addSensor(SENSOR_STR, "GEORGE");
     frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
     frame.showFrame();  /* Print the frame here */
@@ -63,6 +61,7 @@ void loop(){
       USB.println(F("Error calling 'getURL' function"));
       WIFI_PRO.printErrorCode();
     }
+    
   }else{
     USB.print(F("WiFi is connected ERROR")); 
     USB.print(F(" Time(ms):"));    

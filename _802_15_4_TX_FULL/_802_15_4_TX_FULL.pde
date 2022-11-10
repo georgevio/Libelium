@@ -10,11 +10,13 @@
 //char RX_ADDRESS[] =   "0013A2004149DA14"; //XBEE S1 from IoT lab
 char RX_ADDRESS[] =     "0013A2004149DA23";
 
-/* NOTE Nov 08, 2022:
+/* 
+ *  NOTE Nov 08, 2022:
  *  Only NET address seems to work.
  *  MAC Address works only for broadcast,
  *  not for specific address
  */
+ 
 char MY_NET_ADDRESS[]="2112";
 char RX_NET_ADDRESS[]="1221";
 //char RX_NET_ADDRESS[]="1111"; // MESHLIUM NET ADDRESS
