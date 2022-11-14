@@ -9,8 +9,8 @@ uint8_t mac_mode = 0; /* 0-3 */ // when API=1 or 2, mac is 0 no matter what
 
 int delayTime;
 
-char WASPMOTE_ID[] = "node_RECV_RX";
-char MY_NET_ADDRESS[] = "1221";
+char WASPMOTE_ID[] = "1225_RECV_RX";
+char MY_NET_ADDRESS[] = "1225";
 char TX_NET_ADDRESS[2];
 
 int rssi;
@@ -116,7 +116,7 @@ void loop(){
     /* Send message back to TX node */
     USB.println(F("\n------- 2. Send a response to the TX node ------")); 
 
-    frame.createFrame(ASCII, WASP_MOTE_ID); /* Set the ID inside the frame */
+    frame.createFrame(ASCII, WASPMOTE_ID); /* Set the ID inside the frame */
     frame.setFrameSize(125);
     /* EXAMPLE_FRAME
      TIMEOUT_FRAME
