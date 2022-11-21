@@ -9,8 +9,8 @@ uint8_t mac_mode = 0; /* 0-3 */ // when API=1 or 2, mac is 0 no matter what
 
 int delayTime;
 
-char WASPMOTE_ID[] = "1225_RECV_RX";
-char MY_NET_ADDRESS[] = "1225";
+char WASPMOTE_ID[] = "4242_RECV_RX";
+char MY_NET_ADDRESS[] = "4242";
 char TX_NET_ADDRESS[2];
 
 int rssi;
@@ -18,7 +18,27 @@ int rssi;
 void setup(){
   USB.ON();
   USB.println(F("***** Complete example (RX node) *****\n"));
+  
   xbee802.ON();
+    
+  RTC.ON(); /* Mote's time */
+  /* TESTED, WORKS FINE! */
+  error = xbee802.setRTCfromMeshlium("0013A20041678A0E"); //Robby1 MAC
+  if( error == 0 ){
+    USB.println(F("SET RTC Time from Meshlium is ok! \n"));
+  }else{
+    USB.println(F("SET RTC Time from Meshlium error..."));
+  }
+  
+  error=xbee802.getPAN();
+  if(error!=0){ /* Only if it didn't get the ID */
+    USB.println(F("ERROR getting PAN_ID..."));
+  }
+  USB.print(F("---> PAN_ID: "));
+  for(int i=0;i<2;i++){
+    USB.printHex(xbee802.PAN_ID[i]);
+  }
+  USB.println();
 
   xbee802.setNodeIdentifier(WASPMOTE_ID);
   xbee802.getNodeIdentifier();
@@ -59,11 +79,23 @@ void setup(){
     USB.print(F(") ERROR!..."));
   }
   USB.println();
+
+  // Show '_serial_id' stored by the API when powering up
+  USB.print(F("---> Serial ID: "));
+  for (int i=0;i<8;i++){
+    USB.printHex(_serial_id[i]);
+  }
+  USB.println();
+
+  USB.print(F("---> RTC Time:"));
+  USB.println(RTC.getTime());
+  
 }
 
 void loop(){
   USB.println(F("\n************** LOOP STARTS **************\n"));
-  
+  RTC.ON(); /* Mote's time */
+    
   /* Receive XBee packet (wait message for 2 seconds) */
   error = xbee802.receivePacketTimeout( 4000 );
   if( error == 0 ){    

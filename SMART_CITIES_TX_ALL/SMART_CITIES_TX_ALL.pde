@@ -1,12 +1,12 @@
+#include <WaspSensorCities_PRO.h>
 #include <WaspXBee802.h>
 #include <WaspFrame.h>
 
 /* Github https://github.com/georgevio/libelium.git */
 
 // TODO: Only broadcast seems to work
-
-//char RX_ADDRESS[] =     "000000000000FFFF"; /* BROADCAST */
-char RX_ADDRESS[] =   "0013A20041678A0E"; /* Robby1 MEshlium MAC */
+char RX_ADDRESS[] =     "000000000000FFFF"; /* BROADCAST */
+//char RX_ADDRESS[] =   "0013A20041678A0E"; /* Robby1 MEshlium MAC */
 //char RX_ADDRESS[] =   "0013A2004149DA14"; //XBEE S1 from IoT lab
 //char RX_ADDRESS[] =     "0013A2004149DA23";
 
@@ -17,9 +17,9 @@ char RX_ADDRESS[] =   "0013A20041678A0E"; /* Robby1 MEshlium MAC */
  *  not for specific address
  */
  
-char MY_NET_ADDRESS[]="1220";
-char RX_NET_ADDRESS[]="1221";
-//char RX_NET_ADDRESS[]="1111"; // MESHLIUM NET ADDRESS
+char MY_NET_ADDRESS[]="5220";
+//char RX_NET_ADDRESS[]="1221";
+char RX_NET_ADDRESS[]="1111"; // MESHLIUM NET ADDRESS
 
 /* In 802.15.4 you can use either full 8 HEX standard MAC
  *  Address, or you can use the 2 HEX NET address.
@@ -30,6 +30,12 @@ uint8_t ADDRESS_TYPE = 1;
 char NODE_ID[] = "TX_SMART_CITIES";
 uint8_t PANID[2] ; /* Set the PAN_ID global variable */
 char node_data[20];
+
+/* MAKE SURE YOU FIND THE CORRECT SOCKET! */
+bmeCitiesSensor  bme(SOCKET_E);
+float temp;  // temperature in ºC
+float hum;   // realitve humidity in %RH
+float pres;   // pressure in Pa
 
 uint8_t error;
 int counter = 0;
@@ -45,12 +51,10 @@ void setup(){
   xbee802.ON();   
 
   PANID[0]=0x33;
-  PANID[1]=0x32;
-  
+  PANID[1]=0x32;  
   /* Only if you need to set the ID */
   if(xbee802.setPAN(PANID)!=0){USB.println(F("ERROR setting PAN_ID..."));}
 
-  
   error=xbee802.getPAN();
   if(error!=0){ /* Only if it didn't get the ID */
     USB.println(F("ERROR getting PAN_ID..."));
@@ -72,7 +76,6 @@ void setup(){
   USB.print(F("---> node ID: "));
   USB.println(xbee802.nodeID); /* Should print the whole array */  
 
-
   RTC.ON(); /* Mote's time */
   /* TESTED, WORKS FINE! */
   error = xbee802.setRTCfromMeshlium("0013A20041678A0E"); //Robby1
@@ -80,7 +83,6 @@ void setup(){
     USB.println(F("SET RTC Time from Meshlium error..."));
   }
 
-  
   USB.print(F("---> API mode: "));
   USB.println(api_mode, DEC);
   /* Set API mode accordingly */
@@ -127,6 +129,22 @@ void setup(){
 void loop(){
   USB.println(F("\n************** LOOP STARTS **************\n"));
 
+  bme.ON();
+  temp = bme.getTemperature();
+  hum = bme.getHumidity();
+  pres = bme.getPressure();
+  USB.println(F("*********** TEMP-HUM-PRESS ***************"));
+  USB.print(F("Temperature: "));
+  USB.printFloat(temp, 2);
+  USB.println(F(" C"));
+  USB.print(F("Relative Humidity: "));
+  USB.printFloat(hum, 2);
+  USB.println(F(" %"));
+  USB.print(F("Pressure: "));
+  USB.printFloat(pres, 2);
+  USB.println(F(" Pa"));
+  USB.println(F("*****************************************\n"));
+  
   counter++;
   sprintf(node_data,"Packet No:%d",counter);
 
@@ -141,8 +159,11 @@ void loop(){
        SERVICE2_FRAME */
   frame.setFrameType(EVENT_FRAME); 
   frame.addSensor(SENSOR_STR, node_data); 
+  frame.addSensor(SENSOR_IN_TEMP, temp);
+  frame.addSensor(SENSOR_CITIES_PRO_HUM, hum);
+  frame.addSensor(SENSOR_CITIES_PRO_PRES, pres);
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-  //USB.println(F("---> Frame 2 send: ")); frame.showFrame();
+  USB.println(F("---> Frame 2 send: ")); frame.showFrame();
   
   if(ADDRESS_TYPE == 0){ /* 0 or 1 */
     USB.print(F("Sending to NET address: "));
@@ -179,6 +200,8 @@ void loop(){
     USB.println(F("---> OOPS..., frame sent error"));
     Utils.blinkRedLED();
   }
+
+  bme.OFF(); /* Obviously saves battery? */
   
   delayTime = 5; /* seconds */
   USB.print(F("\n***** LOOP END, Wait for "));

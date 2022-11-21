@@ -1,4 +1,5 @@
 #include <WaspSensorCities_PRO.h>
+#include <WaspXBee802.h>
 
 /*
    Waspmote OEM. Possibilities for this sensor:
@@ -22,21 +23,33 @@ float temperature;	// Stores the temperature in ºC
 float humidity;		// Stores the realitve humidity in %RH
 float pressure;		// Stores the pressure in Pa
 
+uint8_t error;
+
 void setup(){
-  USB.println(F("Temperature, humidity and pressure sensor example"));
+  USB.println(F("**** Temperature, humidity and pressure sensor example ****"));
+  RTC.ON();
+  xbee802.ON();
+
+  USB.print(F("RTC INITIAL Time:"));
+  USB.println(RTC.getTime());
+  
+  // Show '_serial_id' stored by the API when powering up
+  USB.print(F("Global variable '_serial_id':"));
+  for (int i=0;i<8;i++){
+    USB.printHex(_serial_id[i]);
+  }
+  USB.println();
 }
 
-void loop(){
-  // 1. Turn on the sensor
-  bme.ON();
 
-  // 2. Read sensors
+void loop(){
+
+  bme.ON();
   temperature = bme.getTemperature();
   humidity = bme.getHumidity();
   pressure = bme.getPressure();
-
-  // And print the values via USB
-  USB.println(F("***************************************"));
+  
+  USB.println(F("*********** TEMP-HUM-PRESS ***************"));
   USB.print(F("Temperature: "));
   USB.printFloat(temperature, 2);
   USB.println(F(" Celsius degrees"));
@@ -47,16 +60,15 @@ void loop(){
   USB.printFloat(pressure, 2);
   USB.println(F(" Pa"));
 
-  // 3. Turn off the sensor
   bme.OFF();
+  delay(4000);
 
-  // 4. Sleep
-
-  // Go to deepsleep
-  // After 10 seconds, Waspmote wakes up thanks to the RTC Alarm
+  /*
+  // 4. deepSleep for 10 sec
   USB.println(F("Go to deep sleep mode..."));
   PWR.deepSleep("00:00:00:10", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF);
   USB.println(F("Wake up!!\r\n"));
+  */
 }
 
 
