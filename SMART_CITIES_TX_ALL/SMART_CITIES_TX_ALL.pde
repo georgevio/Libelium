@@ -23,7 +23,7 @@ char RX_NET_ADDRESS[]="1111"; // MESHLIUM NET ADDRESS
 
 /* In 802.15.4 you can use either full 8 HEX standard MAC
  *  Address, or you can use the 2 HEX NET address.
- *  The receiver will adapt automatically.
+ * The receiver will adapt automatically.
  *  0= use NET ADDRESS, 1 = USE MAC */
 uint8_t ADDRESS_TYPE = 1;
 
@@ -31,11 +31,16 @@ char NODE_ID[] = "TX_SMART_CITIES";
 uint8_t PANID[2] ; /* Set the PAN_ID global variable */
 char node_data[20];
 
-/* MAKE SURE YOU FIND THE CORRECT SOCKET! */
+/* MAKE SURE YOU FIND THE CORRECT SOCKETS! */
 bmeCitiesSensor  bme(SOCKET_E);
+Gas gas_sensor(SOCKET_F);
+Gas CO(SOCKET_D);
+
 float temp;  // temperature in ºC
 float hum;   // realitve humidity in %RH
 float pres;   // pressure in Pa
+float noise_level;   // noise  in dB
+float gas_concentration;
 
 uint8_t error;
 int counter = 0;
@@ -47,16 +52,21 @@ uint8_t mac_mode = 0; /* 0-3 */
 void setup(){
   USB.ON();
   USB.println(F("\n******* 802.15.4 SEND (TX) FULL ******\n"));
-  
+  noise.configure(); 
   xbee802.ON();   
+
+
+
+  gas_sensor.ON();
+
+
 
   PANID[0]=0x33;
   PANID[1]=0x32;  
   /* Only if you need to set the ID */
   if(xbee802.setPAN(PANID)!=0){USB.println(F("ERROR setting PAN_ID..."));}
 
-  error=xbee802.getPAN();
-  if(error!=0){ /* Only if it didn't get the ID */
+  if(xbee802.getPAN()!=0){ /* Only if it didn't get the ID */
     USB.println(F("ERROR getting PAN_ID..."));
   }
   USB.print(F("---> PAN_ID: "));
@@ -123,7 +133,7 @@ void setup(){
 
   USB.print(F("---> RTC Time:"));
   USB.println(RTC.getTime());
-  
+
 }
 
 void loop(){
@@ -133,7 +143,9 @@ void loop(){
   temp = bme.getTemperature();
   hum = bme.getHumidity();
   pres = bme.getPressure();
-  USB.println(F("*********** TEMP-HUM-PRESS ***************"));
+  error = noise.getSPLA(SLOW_MODE);
+
+  USB.println(F("****** TEMP-HUM-PRESS-SOUND ***************"));
   USB.print(F("Temperature: "));
   USB.printFloat(temp, 2);
   USB.println(F(" C"));
@@ -143,6 +155,38 @@ void loop(){
   USB.print(F("Pressure: "));
   USB.printFloat(pres, 2);
   USB.println(F(" Pa"));
+
+  error = noise.getSPLA(SLOW_MODE);
+  if (error == 0) {
+    noise_level = noise.SPLA;
+    USB.print(F("Sound Level - A-Weight (SLOW): "));
+    //USB.print(noise.SPLA);
+    USB.print(noise_level);
+    USB.println(F(" dBA"));
+  }else{
+    USB.println(F("[CITIES PRO] Audio sensor Comm Err (SLOW)"));
+  }
+
+  /* 
+   *  Reminders:
+   * Gas gas_sensor(SOCKET_F);
+   * Gas CO(SOCKET_D);
+   */
+  gas_sensor.showSensorInfo(); /* CO2 SENSOR */
+  CO.showSensorInfo();
+  // Read the electrochemical sensor and compensate with the temperature internally
+  gas_concentration = gas_sensor.getConc(temp);
+
+// Read gas concentration
+//gas_concentration = gas_sensor.getConc();
+// Read gas concentration with ultra high resolution (18 bits)
+//gas_concentration = gas_sensor.getConc(MCP3421_ULTRA_HIGH_RES);
+// Read gas concentration from O3 sensor with low res and compensate NO2 gas
+//gas_concentration = gas_sensor.getConc(MCP3421_LOW_RES, 0.125);
+// Read gas concentration
+//gas_concentration = gas_sensor.getConc(MCP3421_MEDIUM_RES, 24.5, 1.25);
+
+
   USB.println(F("*****************************************\n"));
   
   counter++;
@@ -162,6 +206,7 @@ void loop(){
   frame.addSensor(SENSOR_IN_TEMP, temp);
   frame.addSensor(SENSOR_CITIES_PRO_HUM, hum);
   frame.addSensor(SENSOR_CITIES_PRO_PRES, pres);
+  frame.addSensor(SENSOR_CITIES_PRO_NOISE, noise_level);
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
   USB.println(F("---> Frame 2 send: ")); frame.showFrame();
   
